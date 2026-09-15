@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import CartPage from './CartPage';
 import { CartContext, CartItem } from '../context/CartContext';
@@ -71,5 +71,47 @@ describe('CartPage', () => {
         expect(screen.getByText('Price: $49.99')).toBeInTheDocument();
         expect(screen.getByText('Quantity: 2')).toBeInTheDocument();
         expect(screen.getByText('Quantity: 1')).toBeInTheDocument();
+        expect(screen.getByText('Total: $109.97')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Checkout' })).toBeInTheDocument();
+    });
+
+    it('Empty Cart', () => {
+        renderWithCartContext({ ...mockCartContext, cartItems: [] });
+
+        expect(screen.getByText('Your Cart')).toBeInTheDocument();
+        expect(screen.getByText('Your cart is empty.')).toBeInTheDocument();
+    })
+
+    it('opens and closes the checkout modal', () => {
+        renderWithCartContext();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Checkout' }));
+        expect(screen.getByTestId('checkout-modal')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByTestId('cancel-checkout'));
+        expect(screen.queryByTestId('checkout-modal')).not.toBeInTheDocument();
+    });
+
+    it('processes the order and displays the processed items', () => {
+        renderWithCartContext();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Checkout' }));
+        fireEvent.click(screen.getByTestId('confirm-checkout'));
+
+        expect(mockCartContext.clearCart).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Your order has been processed!')).toBeInTheDocument();
+        expect(screen.getByText('Test Product 1')).toBeInTheDocument();
+        expect(screen.getByText('Test Product 2')).toBeInTheDocument();
+        expect(screen.getByText('Price: $29.99')).toBeInTheDocument();
+        expect(screen.getByText('Price: $49.99')).toBeInTheDocument();
+        expect(screen.getByText('Quantity: 2')).toBeInTheDocument();
+        expect(screen.getByText('Quantity: 1')).toBeInTheDocument();
+        expect(screen.queryByTestId('checkout-modal')).not.toBeInTheDocument();
+    });
+
+    it('throws when rendered without a CartProvider', () => {
+        expect(() => render(<CartPage />)).toThrow(
+            'CartContext must be used within a CartProvider'
+        );
     });
 });

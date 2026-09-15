@@ -3,6 +3,7 @@ import Header from './Header';
 import Footer from './Footer';
 import { CartContext, CartItem } from '../context/CartContext';
 import CheckoutModal from './CheckoutModal';
+import { calculateTotal } from '../utils/helpers';
 
 const CartPage = () => {
     const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -75,6 +76,7 @@ const CartPage = () => {
                                     </div>
                                 ))}
                             </div>
+                            <p>Total: ${calculateTotal(cartItems).toFixed(2)}</p>
                             <button onClick={handleCheckout} className="checkout-btn">Checkout</button>
                         </>
                     )}
